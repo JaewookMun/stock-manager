@@ -1,7 +1,9 @@
+import { NavLink } from "react-router"
+
 function Sidebar() {
   return (
     <>
-      <div>test - Sidebar</div>
+      
     </>
   )
 }

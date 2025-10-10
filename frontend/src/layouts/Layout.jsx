@@ -1,12 +1,12 @@
 import { Outlet } from "react-router"
-import Header from "./Header"
 import Sidebar from "./Sidebar"
+import Header from "./Header"
 
 function Layout() {
   return (
     <>
-      <Header />
       <Sidebar />
+      <Header />
       <main>
         <Outlet />
       </main>

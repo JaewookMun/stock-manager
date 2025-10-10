@@ -17,4 +17,7 @@ If you are developing a production application, we recommend using TypeScript wi
 
 ## UI templates
 
-use free Bootstrap UI template, [Mantis Free Bootstrap Admin Template](https://github.com/codedthemes/mantis-free-bootstrap-admin-template)
+use free react template, [Datta Able Free React Admin Template](https://github.com/codedthemes/datta-able-free-react-admin-template)
+
+Ref
+- 31+ Best Free React Templates for 2025 - https://uideck.com/blog/free-react-templates
