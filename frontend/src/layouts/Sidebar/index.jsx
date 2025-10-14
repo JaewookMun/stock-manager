@@ -40,7 +40,8 @@ export default function Sidebar() {
         <div className="navbar-wrapper">
           <div className="m-header">
             <a className="b-brand text-primary">
-              <Image src={logo} fluid className="logo logo-lg" alt="logo" />
+              {/* <Image src={logo} fluid className="logo logo-lg" alt="logo" /> */}
+              <div className="logo logo-lg">Stock Manager</div>
             </a>
           </div>
 

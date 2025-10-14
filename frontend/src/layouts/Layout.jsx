@@ -7,9 +7,11 @@ function Layout() {
     <>
       <Sidebar />
       <Header />
-      <main>
-        <Outlet />
-      </main>
+      <div className="pc-container">
+        <div className="pc-content">
+          <Outlet />
+        </div>
+      </div>
     </>
   )
 }
