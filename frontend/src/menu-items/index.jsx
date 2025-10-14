@@ -1,16 +1,13 @@
 // project-imports
-import chartsMaps from './charts-maps';
-import formComponents from './forms';
-import navigation from './navigation';
-import other from './other';
-import pages from './pages';
-import tableComponents from './tables';
-import uiComponents from './ui-components';
+import navigation from "./navigation"
+import analysis from "./analysis"
+import assets from "./assets"
 
 // ==============================|| MENU ITEMS ||============================== //
 
 const menuItems = {
-  items: [navigation, uiComponents, formComponents, tableComponents, chartsMaps, pages, other]
+  // items: [navigation, uiComponents, formComponents, tableComponents, chartsMaps, pages, other]
+  items: [navigation, analysis, assets]
 };
 
 export default menuItems;
