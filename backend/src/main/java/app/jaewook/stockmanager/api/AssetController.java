@@ -5,12 +5,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/assets")
-public class AssetsController {
+public class AssetController {
 
     /**
      * TODO: GET /api/assets/realized-pnl
      * 실현손익 기록 조회
      */
+
 
     /*
      * TODO: GET /api/assets/cash-flow
