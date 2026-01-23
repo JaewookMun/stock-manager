@@ -1,38 +1,32 @@
-package app.jaewook.stockmanager.api.dto;
-
-import lombok.Builder;
+package app.jaewook.stockmanager.service.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-public class AssetResponse {
-    @Builder
+public class AssetResult {
     public record RealizedPnl(
-        List<RealizedPnlItem> items  // 일자별종목별실현손익
+        List<RealizedPnlItemDto> items      // 일자별종목별실현손익
     ) {
-        @Builder
-        public record RealizedPnlItem(
-            LocalDate date,             // 일자
+        public record RealizedPnlItemDto(
+            LocalDate date,                 // 일자
             BigDecimal htsSellCommission,   // 당일hts매도수수료
-            String stockName,           // 종목명
-            Integer quantity,           // 체결량
-            BigDecimal buyPrice,        // 매입단가
-            BigDecimal executionPrice,  // 체결가
-            BigDecimal realizedPnl,     // 당일매도손익
-            BigDecimal pnlRate,         // 손익율
-            String stockCode,           // 종목코드
+            String stockName,               // 종목명
+            int quantity,                   // 체결량
+            BigDecimal buyPrice,            // 매입단가
+            BigDecimal executionPrice,      // 체결가
+            BigDecimal realizedPnl,         // 당일매도손익
+            BigDecimal pnlRate,             // 손익율
+            String stockCode,               // 종목코드
             BigDecimal tradingCommission,   // 당일매매수수료
-            BigDecimal tradingTax       // 당일매매세금
+            BigDecimal tradingTax           // 당일매매세금
         ) {}
     }
 
-    @Builder
     public record CashFlow(
-        List<CashFlowItem> items        // 위탁종합거래내역배열
+        List<CashFlowItemDto> items         // 위탁종합거래내역배열
     ) {
-        @Builder
-        public record CashFlowItem(
+        public record CashFlowItemDto(
             String tradeDate,               // 거래일자
             String tradeNumber,             // 거래번호
             String summary,                 // 적요명
