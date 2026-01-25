@@ -28,4 +28,17 @@ public class StockResponse {
             BigDecimal dividend
         ) {}
     }
+
+    @Builder
+    public record Conditions(
+        int resultCode,
+        String resultMessage,
+        List<ConditionItem> items
+    ) {
+        @Builder
+        public record ConditionItem(
+            String conditionSeq,
+            String conditionName
+        ) {}
+    }
 }

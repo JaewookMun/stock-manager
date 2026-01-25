@@ -20,6 +20,16 @@ public class StockController {
     private final StockControllerMapper mapper;
 
     /**
+     * GET /api/stocks/conditions
+     * 검색조건 목록 조회 API
+     */
+    @GetMapping("/conditions")
+    public ApiResponse<StockResponse.Conditions> conditions() {
+        StockResult.Conditions result = stockService.getConditions();
+        return ApiResponse.success(mapper.fromConditionsResult(result));
+    }
+
+    /**
      * GET /api/stocks/screen
      * 상장기업 조건 검색 API
      */

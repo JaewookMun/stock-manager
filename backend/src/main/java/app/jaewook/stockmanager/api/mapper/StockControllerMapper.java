@@ -23,6 +23,23 @@ public class StockControllerMapper {
      * Service DTO -> Controller DTO Mapping
      */
 
+    public StockResponse.Conditions fromConditionsResult(StockResult.Conditions result) {
+        return StockResponse.Conditions.builder()
+                .resultCode(result.resultCode())
+                .resultMessage(result.resultMessage())
+                .items(result.items().stream()
+                        .map(this::toConditionItem)
+                        .toList())
+                .build();
+    }
+
+    private StockResponse.Conditions.ConditionItem toConditionItem(StockResult.Conditions.ConditionInfo info) {
+        return StockResponse.Conditions.ConditionItem.builder()
+                .conditionSeq(info.conditionSeq())
+                .conditionName(info.conditionName())
+                .build();
+    }
+
     public StockResponse.Screen fromScreenResult(StockResult.Screen result) {
         return StockResponse.Screen.builder()
                 .totalCount(result.totalCount())
