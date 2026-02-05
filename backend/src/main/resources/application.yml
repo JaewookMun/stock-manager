@@ -8,3 +8,11 @@ spring:
     password: mun1103
   jpa:
     open-in-view: false
+    hibernate:
+#      ddl-auto: create
+      ddl-auto: none
+    show-sql: true
+
+logging:
+  level:
+    app.jaewook.stockmanager: DEBUG
