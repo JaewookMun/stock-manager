@@ -41,7 +41,7 @@ public class KiwoomApiMapper {
         }
 
         List<AssetResult.RealizedPnl.RealizedPnlItemDto> items = response.output().stream()
-                .map(this::toRealizedPnlItem)
+                .map(this::toServiceResultItem)
                 .toList();
 
         return new AssetResult.RealizedPnl(items);
@@ -66,13 +66,13 @@ public class KiwoomApiMapper {
         }
 
         List<AssetResult.CashFlow.CashFlowItemDto> items = response.output().stream()
-                .map(this::toCashFlowItem)
+                .map(this::toServiceResultItem)
                 .toList();
 
         return new AssetResult.CashFlow(items);
     }
 
-    private AssetResult.CashFlow.CashFlowItemDto toCashFlowItem(KiwoomCashFlowResponse.CashFlowItem item) {
+    public AssetResult.CashFlow.CashFlowItemDto toServiceResultItem(KiwoomCashFlowResponse.CashFlowItem item) {
         return new AssetResult.CashFlow.CashFlowItemDto(
                 item.tradeDate(),
                 item.tradeNumber(),
@@ -128,7 +128,7 @@ public class KiwoomApiMapper {
         );
     }
 
-    private AssetResult.RealizedPnl.RealizedPnlItemDto toRealizedPnlItem(
+    public AssetResult.RealizedPnl.RealizedPnlItemDto toServiceResultItem(
             KiwoomRealizedPnlResponse.RealizedPnlItem item) {
         return new AssetResult.RealizedPnl.RealizedPnlItemDto(
                 parseDate(item.date()),
