@@ -1,6 +1,7 @@
 package app.jaewook.stockmanager.infra.kiwoom;
 
 import app.jaewook.stockmanager.infra.kiwoom.dto.*;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -53,51 +54,103 @@ public class KiwoomApiClient {
 
     /**
      * 일자별종목별실현손익요청_기간 (ka10073)
+     * 단일 요청만 처리. 연속 조회가 필요한 경우 서비스 레이어에서 처리
+     *
+     * @param request     요청 DTO
+     * @param accessToken 접근 토큰
+     * @param nextKey     연속 조회 키 (첫 요청 시 null)
+     * @return 응답 + 페이지네이션 헤더
      */
-    public KiwoomRealizedPnlResponse getRealizedPnlByPeriod(KiwoomRealizedPnlRequest request, String accessToken) {
-        log.info("Calling Kiwoom API - getRealizedPnlByPeriod: {}", request);
+    public KiwoomRealizedPnlResult getRealizedPnlByPeriod(KiwoomRealizedPnlRequest request, String accessToken, @Nullable String nextKey) {
+        log.info("Calling Kiwoom API - getRealizedPnlByPeriod: {}, nextKey={}", request, nextKey);
 
-        KiwoomRealizedPnlResponse response = restClient.post()
+        ResponseEntity<KiwoomRealizedPnlResponse> responseEntity = callRealizedPnlApi(request, accessToken, nextKey);
+        KiwoomResponseHeader responseHeader = extractResponseHeader(responseEntity.getHeaders());
+        KiwoomRealizedPnlResponse response = responseEntity.getBody();
+
+        log.info("Kiwoom API response - getRealizedPnlByPeriod: resultCode={}, message={}, hasNext={}, nextKey={}",
+                response != null ? response.resultCode() : null,
+                response != null ? response.message() : null,
+                responseHeader.hasNext(),
+                responseHeader.nextKey());
+
+        return new KiwoomRealizedPnlResult(response, responseHeader);
+    }
+
+    private ResponseEntity<KiwoomRealizedPnlResponse> callRealizedPnlApi(
+            KiwoomRealizedPnlRequest request, String accessToken, String nextKey) {
+
+        RestClient.RequestBodySpec requestSpec = restClient.post()
                 .uri(BASE_URL + "/api/dostk/acnt")
                 .headers(headers -> setCommonHeaders(headers, accessToken))
-                .header("api-id", TR_ID_REALIZED_PNL_PERIOD)
+                .header("api-id", TR_ID_REALIZED_PNL_PERIOD);
+
+        if (nextKey != null) {
+            requestSpec = requestSpec
+                    .header(CONTINUE_CHECK, "Y")
+                    .header(NEXT_KEY, nextKey);
+        }
+
+        return requestSpec
                 .body(request)
                 .retrieve()
-                .body(KiwoomRealizedPnlResponse.class);
-
-        log.info("Kiwoom API response - getRealizedPnlByPeriod: resultCode={}, message={}",
-                response != null ? response.resultCode() : null,
-                response != null ? response.message() : null);
-
-        return response;
+                .toEntity(KiwoomRealizedPnlResponse.class);
     }
 
     /**
      * 위탁종합거래내역요청 (kt00015)
+     * 단일 요청만 처리. 연속 조회가 필요한 경우 서비스 레이어에서 처리
+     *
+     * @param request     요청 DTO
+     * @param accessToken 접근 토큰
+     * @param nextKey     연속 조회 키 (첫 요청 시 null)
+     * @return 응답 + 페이지네이션 헤더
      */
-    public KiwoomCashFlowResponse getCashFlow(KiwoomCashFlowRequest request, String accessToken) {
-        log.info("Calling Kiwoom API - getCashFlow: {}", request);
+    public KiwoomCashFlowResult getCashFlow(KiwoomCashFlowRequest request, String accessToken, @Nullable String nextKey) {
+        log.info("Calling Kiwoom API - getCashFlow: {}, nextKey={}", request, nextKey);
 
-        ResponseEntity<KiwoomCashFlowResponse> responseEntity = restClient.post()
+        ResponseEntity<KiwoomCashFlowResponse> responseEntity = callCashFlowApi(request, accessToken, nextKey);
+        KiwoomResponseHeader responseHeader = extractResponseHeader(responseEntity.getHeaders());
+        KiwoomCashFlowResponse response = responseEntity.getBody();
+
+        log.info("Kiwoom API response - getCashFlow: resultCode={}, message={}, hasNext={}, nextKey={}",
+                response != null ? response.resultCode() : null,
+                response != null ? response.message() : null,
+                responseHeader.hasNext(),
+                responseHeader.nextKey());
+
+        return new KiwoomCashFlowResult(response, responseHeader);
+    }
+
+    private ResponseEntity<KiwoomCashFlowResponse> callCashFlowApi(
+            KiwoomCashFlowRequest request, String accessToken, String nextKey) {
+
+        RestClient.RequestBodySpec requestSpec = restClient.post()
                 .uri(BASE_URL + "/api/dostk/acnt")
                 .headers(headers -> setCommonHeaders(headers, accessToken))
-                .header("api-id", TR_ID_CASH_FLOW)
+                .header("api-id", TR_ID_CASH_FLOW);
+
+        // 연속 조회인 경우 헤더 추가
+        if (nextKey != null) {
+            requestSpec = requestSpec
+                    .header(CONTINUE_CHECK, "Y")
+                    .header(NEXT_KEY, nextKey);
+        }
+
+        return requestSpec
                 .body(request)
                 .retrieve()
                 .toEntity(KiwoomCashFlowResponse.class);
+    }
 
-        HttpHeaders headers = responseEntity.getHeaders();
+    private KiwoomResponseHeader extractResponseHeader(HttpHeaders headers) {
         String continueYn = headers.getFirst(CONTINUE_CHECK);
         String nextKey = headers.getFirst(NEXT_KEY);
-        log.info("Kiwoom API response - getCashFlow: continueYn={}, nextKey={}", continueYn, nextKey);
 
-        KiwoomCashFlowResponse response = responseEntity.getBody();
-
-        log.info("Kiwoom API response - getCashFlow: resultCode={}, message={}",
-                response != null ? response.resultCode() : null,
-                response != null ? response.message() : null);
-
-        return response;
+        return KiwoomResponseHeader.builder()
+                .hasNext(continueYn != null && continueYn.equals("Y"))
+                .nextKey(nextKey)
+                .build();
     }
 
     private void setCommonHeaders(HttpHeaders headers, String accessToken) {
