@@ -10,7 +10,7 @@ public class AssetResult {
     ) {
         public record RealizedPnlItemDto(
             LocalDate date,                 // 일자
-            BigDecimal htsSellCommission,   // 당일hts매도수수료
+            String htsSellCommission,   // 당일hts매도수수료
             String stockName,               // 종목명
             int quantity,                   // 체결량
             BigDecimal buyPrice,            // 매입단가

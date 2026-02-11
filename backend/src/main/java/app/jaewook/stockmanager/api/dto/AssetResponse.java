@@ -14,7 +14,7 @@ public class AssetResponse {
         @Builder
         public record RealizedPnlItem(
             LocalDate date,             // 일자
-            BigDecimal htsSellCommission,   // 당일hts매도수수료
+            String htsSellCommission,   // 당일hts매도수수료
             String stockName,           // 종목명
             Integer quantity,           // 체결량
             BigDecimal buyPrice,        // 매입단가

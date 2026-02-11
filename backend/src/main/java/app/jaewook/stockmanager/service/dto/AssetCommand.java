@@ -7,6 +7,7 @@ import java.time.LocalDate;
 public class AssetCommand {
     @Builder
     public record RealizedPnl(
+        String accountNumber,   // 계좌번호
         String stockCode,       // 종목코드
         LocalDate startDate,    // 시작일자 (YYYYMMDD)
         LocalDate endDate       // 종료일자 (YYYYMMDD)
@@ -15,6 +16,7 @@ public class AssetCommand {
 
     @Builder
     public record CashFlow(
+        String accountNumber,          // 계좌번호
         LocalDate startDate,           // 시작일자 (YYYYMMDD)
         LocalDate endDate,             // 종료일자 (YYYYMMDD)
         String category,               // 구분

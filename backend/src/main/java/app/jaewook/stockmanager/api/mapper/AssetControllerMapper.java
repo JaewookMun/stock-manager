@@ -17,6 +17,7 @@ public class AssetControllerMapper {
 
     public AssetCommand.RealizedPnl toRealizedPnlCommand(AssetRequest.RealizedPnl request) {
         return AssetCommand.RealizedPnl.builder()
+                .accountNumber(request.accountNumber())
                 .stockCode(request.stockCode())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
@@ -25,6 +26,7 @@ public class AssetControllerMapper {
 
     public AssetCommand.CashFlow toCashFlowCommand(AssetRequest.CashFlow request) {
         return AssetCommand.CashFlow.builder()
+                .accountNumber(request.accountNumber())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .category(request.category())
