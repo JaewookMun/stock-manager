@@ -1,6 +1,7 @@
 package app.jaewook.stockmanager.infra.kiwoom;
 
 import app.jaewook.stockmanager.infra.kiwoom.dto.*;
+import app.jaewook.stockmanager.infra.kiwoom.dto.stock.*;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,8 @@ public class KiwoomApiClient {
     private static final String BASE_URL = "https://api.kiwoom.com";
     private static final String TR_ID_REALIZED_PNL_PERIOD = "ka10073";
     private static final String TR_ID_CASH_FLOW = "kt00015";
+    private static final String TR_ID_STOCK_INFO = "ka10099";
+    private static final String TR_ID_STOCK_BASIC_INFO = "ka10001";
     private static final String OAUTH_TOKEN_PATH = "/oauth2/token";
 
     /**
@@ -141,6 +144,76 @@ public class KiwoomApiClient {
                 .body(request)
                 .retrieve()
                 .toEntity(KiwoomCashFlowResponse.class);
+    }
+
+    /**
+     * 종목정보 리스트 (ka10099)
+     * 단일 요청만 처리. 연속 조회가 필요한 경우 서비스 레이어에서 처리
+     *
+     * @param request     요청 DTO
+     * @param accessToken 접근 토큰
+     * @param nextKey     연속 조회 키 (첫 요청 시 null)
+     * @return 응답 + 페이지네이션 헤더
+     */
+    public KiwoomStockInfoResult getStockInfoList(KiwoomStockInfoRequest request, String accessToken, @Nullable String nextKey) {
+        log.info("Calling Kiwoom API - getStockInfoList: {}, nextKey={}", request, nextKey);
+
+        ResponseEntity<KiwoomStockInfoResponse> responseEntity = callStockInfoApi(request, accessToken, nextKey);
+        KiwoomResponseHeader responseHeader = extractResponseHeader(responseEntity.getHeaders());
+        KiwoomStockInfoResponse response = responseEntity.getBody();
+
+        log.info("Kiwoom API response - getStockInfoList: resultCode={}, message={}, hasNext={}, nextKey={}",
+                response != null ? response.resultCode() : null,
+                response != null ? response.message() : null,
+                responseHeader.hasNext(),
+                responseHeader.nextKey());
+
+        return new KiwoomStockInfoResult(response, responseHeader);
+    }
+
+    private ResponseEntity<KiwoomStockInfoResponse> callStockInfoApi(
+            KiwoomStockInfoRequest request, String accessToken, String nextKey) {
+
+        RestClient.RequestBodySpec requestSpec = restClient.post()
+                .uri(BASE_URL + "/api/dostk/stkinfo")
+                .headers(headers -> setCommonHeaders(headers, accessToken))
+                .header("api-id", TR_ID_STOCK_INFO);
+
+        if (nextKey != null) {
+            requestSpec = requestSpec
+                    .header(CONTINUE_CHECK, "Y")
+                    .header(NEXT_KEY, nextKey);
+        }
+
+        return requestSpec
+                .body(request)
+                .retrieve()
+                .toEntity(KiwoomStockInfoResponse.class);
+    }
+
+    /**
+     * 주식기본정보요청 (ka10001)
+     *
+     * @param request     요청 DTO (종목코드)
+     * @param accessToken 접근 토큰
+     * @return 주식 기본정보 응답
+     */
+    public KiwoomStockBasicInfoResponse getStockBasicInfo(KiwoomStockBasicInfoRequest request, String accessToken) {
+        log.info("Calling Kiwoom API - getStockBasicInfo: {}", request);
+
+        KiwoomStockBasicInfoResponse response = restClient.post()
+                .uri(BASE_URL + "/api/dostk/stkinfo")
+                .headers(headers -> setCommonHeaders(headers, accessToken))
+                .header("api-id", TR_ID_STOCK_BASIC_INFO)
+                .body(request)
+                .retrieve()
+                .body(KiwoomStockBasicInfoResponse.class);
+
+        log.info("Kiwoom API response - getStockBasicInfo: resultCode={}, message={}",
+                response != null ? response.resultCode() : null,
+                response != null ? response.message() : null);
+
+        return response;
     }
 
     private KiwoomResponseHeader extractResponseHeader(HttpHeaders headers) {
