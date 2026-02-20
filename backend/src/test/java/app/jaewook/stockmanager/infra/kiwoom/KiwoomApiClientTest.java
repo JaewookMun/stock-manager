@@ -3,6 +3,7 @@ package app.jaewook.stockmanager.infra.kiwoom;
 import app.jaewook.stockmanager.domain.Account;
 import app.jaewook.stockmanager.infra.db.AccountRepository;
 import app.jaewook.stockmanager.infra.kiwoom.dto.*;
+import app.jaewook.stockmanager.infra.kiwoom.dto.stock.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -77,4 +78,39 @@ class KiwoomApiClientTest {
         System.out.println("response = " + response);
         assertNotNull(response);
     }
+
+    @Test
+    void getStockInfoList() {
+        // given
+        Account account = accountRepository.findAll().getFirst();
+        String accessToken = tokenManager.getValidToken(account.getAccountNumber());
+        KiwoomStockInfoRequest request = KiwoomStockInfoRequest.builder()
+                .marketType(MarketType.KOSPI) // 코스피
+                .build();
+
+        // when
+        KiwoomStockInfoResult response = kiwoomApiClient.getStockInfoList(request, accessToken, null);
+
+        // then
+        System.out.println("response = " + response);
+        assertNotNull(response);
+    }
+
+    @Test
+    void getStockBasicInfo() {
+        // given
+        Account account = accountRepository.findAll().getFirst();
+        String accessToken = tokenManager.getValidToken(account.getAccountNumber());
+        KiwoomStockBasicInfoRequest request = KiwoomStockBasicInfoRequest.builder()
+                .stockCode("005930") // 삼성전자
+                .build();
+
+        // when
+        KiwoomStockBasicInfoResponse response = kiwoomApiClient.getStockBasicInfo(request, accessToken);
+
+        // then
+        System.out.println("response = " + response);
+        assertNotNull(response);
+    }
+
 }
