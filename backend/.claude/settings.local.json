@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:openapi.kiwoom.com)",
+      "Bash(cmd.exe /c \"gradlew.bat compileJava\")",
+      "Bash(cmd.exe /c:*)",
+      "Bash(powershell.exe -Command:*)",
+      "Bash(gradlew.bat compileJava:*)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
