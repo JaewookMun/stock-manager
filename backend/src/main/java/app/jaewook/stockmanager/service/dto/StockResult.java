@@ -32,14 +32,15 @@ public class StockResult {
             String code,
             String name,
             BigDecimal price,
+            BigDecimal marketCap,
             long totalQuantity,
             BigDecimal roe,
             BigDecimal per,
             BigDecimal pbr,
-            BigDecimal debtRatio,
-            // 영업이익률
-            BigDecimal operatingMargin,
-            BigDecimal dividend
+            BigDecimal eps,
+            BigDecimal bps,
+            BigDecimal operatingProfit,
+            BigDecimal salesAmount
         ) {}
     }
 }

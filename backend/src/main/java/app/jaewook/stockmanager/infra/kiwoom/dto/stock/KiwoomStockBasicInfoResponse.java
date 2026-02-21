@@ -89,7 +89,7 @@ public record KiwoomStockBasicInfoResponse(
 
     // 시가총액/투자지표
     @JsonProperty("mac")
-    String marketCap,                   // 시가총액
+    String marketCap,                   // 시가총액 (단위: 억원)
 
     @JsonProperty("mac_wght")
     String marketCapWeight,             // 시가총액비중
