@@ -16,6 +16,11 @@ public class StockControllerMapper {
     public StockCommand.Screen toScreenCommand(StockRequest.Screen request) {
         return StockCommand.Screen.builder()
                 .exchangeType(request.exchangeType())
+                .minRoe(request.minRoe())
+                .maxRoe(request.maxRoe())
+                .minPer(request.minPer())
+                .maxPer(request.maxPer())
+                .page(request.page())
                 .build();
     }
 
@@ -56,13 +61,15 @@ public class StockControllerMapper {
                 .code(dto.code())
                 .name(dto.name())
                 .price(dto.price())
+                .marketCap(dto.marketCap())
                 .totalQuantity(dto.totalQuantity())
                 .roe(dto.roe())
                 .per(dto.per())
                 .pbr(dto.pbr())
-                .debtRatio(dto.debtRatio())
-                .operatingMargin(dto.operatingMargin())
-                .dividend(dto.dividend())
+                .eps(dto.eps())
+                .bps(dto.bps())
+                .operatingProfit(dto.operatingProfit())
+                .salesAmount(dto.salesAmount())
                 .build();
     }
 }
