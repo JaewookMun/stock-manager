@@ -1,9 +1,11 @@
 package app.jaewook.stockmanager.service;
 
+import app.jaewook.stockmanager.domain.Account;
 import app.jaewook.stockmanager.domain.CashFlow;
 import app.jaewook.stockmanager.domain.CashFlowFetchHistory;
 import app.jaewook.stockmanager.domain.RealizedPnl;
 import app.jaewook.stockmanager.domain.RealizedPnlFetchHistory;
+import app.jaewook.stockmanager.infra.db.AccountRepository;
 import app.jaewook.stockmanager.infra.db.CashFlowHistoryRepository;
 import app.jaewook.stockmanager.infra.db.CashFlowRepository;
 import app.jaewook.stockmanager.infra.kiwoom.KiwoomTokenManager;
@@ -42,6 +44,7 @@ public class AssetService {
     private static final int MAX_MONTHS_PER_REALIZED_PNL_REQUEST = 3;
     private static final int MAX_MONTHS_PER_CASH_FLOW_REQUEST = 12;
 
+    private final AccountRepository accountRepository;
     private final KiwoomTokenManager tokenManager;
     private final KiwoomApiClient kiwoomApiClient;
     private final KiwoomApiMapper kiwoomApiMapper;
@@ -60,10 +63,12 @@ public class AssetService {
     public AssetResult.RealizedPnl getRealizedPnl(AssetCommand.RealizedPnl command) {
         log.info("getRealizedPnl - command: {}", command);
 
+        Account account = accountRepository.findById(command.accountId())
+                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + command.accountId()));
+
         // 1. 요청 기간 내 조회 이력이 있는 날짜 확인
         List<RealizedPnlFetchHistory> fetchedHistories = realizedPnlHistoryRepository
-                .findByAccountNumberAndTargetDateBetween(
-                        command.accountNumber(), command.startDate(), command.endDate());
+                .findByAccountAndTargetDateBetween(account, command.startDate(), command.endDate());
 
         Set<LocalDate> fetchedDates = fetchedHistories.stream()
                 .map(RealizedPnlFetchHistory::getTargetDate)
@@ -74,15 +79,15 @@ public class AssetService {
 
         if (!missingDates.isEmpty()) {
             log.info("getRealizedPnl - fetching data for {} missing dates from Kiwoom API", missingDates.size());
-            fetchAndSaveFromKiwoom(command, missingDates);
+            fetchAndSaveFromKiwoom(command, account, missingDates);
         } else {
             log.info("getRealizedPnl - all dates cached for account: {}, period: {} ~ {}",
-                    command.accountNumber(), command.startDate(), command.endDate());
+                    account.getAccountNumber(), command.startDate(), command.endDate());
         }
 
         // 3. DB에서 해당 기간의 실현손익 데이터 조회
         List<RealizedPnl> realizedPnls = realizedPnlRepository
-                .findByDateBetweenOrderByDateDescStockCodeAsc(command.startDate(), command.endDate());
+                .findByAccountAndDateBetweenOrderByDateDescStockCodeAsc(account, command.startDate(), command.endDate());
 
         return realizedPnlDbMapper.toServiceResult(realizedPnls);
     }
@@ -98,10 +103,12 @@ public class AssetService {
     public AssetResult.CashFlow getCashFlow(AssetCommand.CashFlow command) {
         log.info("getCashFlow - command: {}", command);
 
+        Account account = accountRepository.findById(command.accountId())
+                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + command.accountId()));
+
         // 1. 요청 기간 내 조회 이력이 있는 날짜 확인
         List<CashFlowFetchHistory> fetchedHistories = cashFlowHistoryRepository
-                .findByAccountNumberAndTargetDateBetween(
-                        command.accountNumber(), command.startDate(), command.endDate());
+                .findByAccountAndTargetDateBetween(account, command.startDate(), command.endDate());
 
         Set<LocalDate> fetchedDates = fetchedHistories.stream()
                 .map(CashFlowFetchHistory::getTargetDate)
@@ -112,20 +119,20 @@ public class AssetService {
 
         if (!missingDates.isEmpty()) {
             log.info("getCashFlow - fetching data for {} missing dates from Kiwoom API", missingDates.size());
-            fetchAndSaveCashFlowFromKiwoom(command, missingDates);
+            fetchAndSaveCashFlowFromKiwoom(command, account, missingDates);
         } else {
             log.info("getCashFlow - all dates cached for account: {}, period: {} ~ {}",
-                    command.accountNumber(), command.startDate(), command.endDate());
+                    account.getAccountNumber(), command.startDate(), command.endDate());
         }
 
         // 3. DB에서 해당 기간의 현금흐름 데이터 조회
         List<CashFlow> cashFlows = cashFlowRepository
-                .findByTradeDateBetweenOrderByTradeDateDescTradeNumberAsc(command.startDate(), command.endDate());
+                .findByAccountAndTradeDateBetweenOrderByTradeDateDescTradeNumberAsc(account, command.startDate(), command.endDate());
 
         return cashFlowDbMapper.toServiceResult(cashFlows);
     }
 
-    private void fetchAndSaveCashFlowFromKiwoom(AssetCommand.CashFlow command, List<LocalDate> missingDates) {
+    private void fetchAndSaveCashFlowFromKiwoom(AssetCommand.CashFlow command, Account account, List<LocalDate> missingDates) {
         LocalDate minDate = missingDates.stream().min(LocalDate::compareTo).orElseThrow();
         LocalDate maxDate = missingDates.stream().max(LocalDate::compareTo).orElseThrow();
 
@@ -133,7 +140,7 @@ public class AssetService {
         List<CashFlow> allEntities = new ArrayList<>();
         List<DateRange> dateRanges = splitIntoChunks(minDate, maxDate, MAX_MONTHS_PER_CASH_FLOW_REQUEST);
 
-        String accessToken = tokenManager.getValidToken(command.accountNumber());
+        String accessToken = tokenManager.getValidToken(account.getAccountNumber());
 
         for (DateRange range : dateRanges) {
             log.info("getCashFlow - fetching from Kiwoom API: {} ~ {}", range.start(), range.end());
@@ -153,7 +160,7 @@ public class AssetService {
             List<KiwoomCashFlowResponse.CashFlowItem> allItems = fetchAllCashFlowPages(kiwoomRequest, accessToken);
 
             for (KiwoomCashFlowResponse.CashFlowItem item : allItems) {
-                allEntities.add(cashFlowDbMapper.toEntity(kiwoomApiMapper.toServiceResultItem(item)));
+                allEntities.add(cashFlowDbMapper.toEntity(kiwoomApiMapper.toServiceResultItem(item), account));
             }
         }
 
@@ -162,7 +169,7 @@ public class AssetService {
 
         // 조회 이력 저장 (각 날짜별로)
         List<CashFlowFetchHistory> histories = missingDates.stream()
-                .map(date -> new CashFlowFetchHistory(command.accountNumber(), date))
+                .map(date -> new CashFlowFetchHistory(account, date))
                 .toList();
         cashFlowHistoryRepository.saveAll(histories);
 
@@ -209,7 +216,7 @@ public class AssetService {
         return missingDates;
     }
 
-    private void fetchAndSaveFromKiwoom(AssetCommand.RealizedPnl command, List<LocalDate> missingDates) {
+    private void fetchAndSaveFromKiwoom(AssetCommand.RealizedPnl command, Account account, List<LocalDate> missingDates) {
         LocalDate minDate = missingDates.stream().min(LocalDate::compareTo).orElseThrow();
         LocalDate maxDate = missingDates.stream().max(LocalDate::compareTo).orElseThrow();
 
@@ -217,7 +224,7 @@ public class AssetService {
         List<RealizedPnl> allEntities = new ArrayList<>();
         List<DateRange> dateRanges = splitIntoChunks(minDate, maxDate, MAX_MONTHS_PER_REALIZED_PNL_REQUEST);
 
-        String accessToken = tokenManager.getValidToken(command.accountNumber());
+        String accessToken = tokenManager.getValidToken(account.getAccountNumber());
 
         for (DateRange range : dateRanges) {
             log.info("getRealizedPnl - fetching from Kiwoom API: {} ~ {}", range.start(), range.end());
@@ -232,7 +239,7 @@ public class AssetService {
             List<KiwoomRealizedPnlResponse.RealizedPnlItem> allItems = fetchAllRealizedPnlPages(kiwoomRequest, accessToken);
 
             for (KiwoomRealizedPnlResponse.RealizedPnlItem item : allItems) {
-                allEntities.add(realizedPnlDbMapper.toEntity(kiwoomApiMapper.toServiceResultItem(item)));
+                allEntities.add(realizedPnlDbMapper.toEntity(kiwoomApiMapper.toServiceResultItem(item), account));
             }
         }
 
@@ -241,7 +248,7 @@ public class AssetService {
 
         // 조회 이력 저장 (각 날짜별로)
         List<RealizedPnlFetchHistory> histories = missingDates.stream()
-                .map(date -> new RealizedPnlFetchHistory(command.accountNumber(), date))
+                .map(date -> new RealizedPnlFetchHistory(account, date))
                 .toList();
         realizedPnlHistoryRepository.saveAll(histories);
 

@@ -7,7 +7,7 @@ import java.time.LocalDate;
 public class AssetRequest {
     @Builder
     public record RealizedPnl(
-            String accountNumber,   // 계좌번호 (Required)
+            Long accountId,         // 계좌 식별정보 (Required)
             String stockCode,       // 종목코드 (Optional, 6자)
             LocalDate startDate,    // 시작일자 (Required, YYYYMMDD)
             LocalDate endDate       // 종료일자 (Required, YYYYMMDD)
@@ -16,7 +16,7 @@ public class AssetRequest {
 
     @Builder
     public record CashFlow(
-        String accountNumber,           // 계좌번호 (Required)
+        Long accountId,                 // 계좌 식별정보 (Required)
         LocalDate startDate,            // 시작일자 (Required, YYYYMMDD)
         LocalDate endDate,              // 종료일자 (Required, YYYYMMDD)
         String category,                // 구분 (Required) 0:전체,1:입출금,2:입출고,3:매매,4:매수,5:매도,6:입금,7:출금 등
