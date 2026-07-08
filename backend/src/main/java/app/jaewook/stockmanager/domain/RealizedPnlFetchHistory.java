@@ -2,14 +2,11 @@ package app.jaewook.stockmanager.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -20,8 +17,9 @@ public class RealizedPnlFetchHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String accountNumber;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @Column(nullable = false)
     private LocalDate targetDate;
@@ -29,8 +27,8 @@ public class RealizedPnlFetchHistory {
     @Column(nullable = false)
     private LocalDateTime fetchedAt;
 
-    public RealizedPnlFetchHistory(String accountNumber, LocalDate targetDate) {
-        this.accountNumber = accountNumber;
+    public RealizedPnlFetchHistory(Account account, LocalDate targetDate) {
+        this.account = account;
         this.targetDate = targetDate;
         this.fetchedAt = LocalDateTime.now();
     }

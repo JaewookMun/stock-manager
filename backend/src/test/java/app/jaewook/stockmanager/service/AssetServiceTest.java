@@ -30,9 +30,9 @@ class AssetServiceTest {
                 .orElseThrow();
 
         RealizedPnl command = RealizedPnl.builder()
-                .accountNumber(account.getAccountNumber())
+                .accountId(account.getId())
                 .stockCode("")
-                .startDate(LocalDate.of(2025, 1, 1))
+                .startDate(LocalDate.of(2018, 1, 1))
                 .endDate(LocalDate.of(2026, 1, 31))
                 .build();
 
@@ -49,8 +49,8 @@ class AssetServiceTest {
                 .orElseThrow();
 
         AssetCommand.CashFlow command = AssetCommand.CashFlow.builder()
-                .accountNumber(account.getAccountNumber())
-                .startDate(LocalDate.of(2024, 1, 1))
+                .accountId(account.getId())
+                .startDate(LocalDate.of(2020, 1, 1))
                 .endDate(LocalDate.of(2026, 1, 31))
                 .build();
 

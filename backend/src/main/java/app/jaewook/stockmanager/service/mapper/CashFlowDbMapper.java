@@ -1,5 +1,6 @@
 package app.jaewook.stockmanager.service.mapper;
 
+import app.jaewook.stockmanager.domain.Account;
 import app.jaewook.stockmanager.domain.CashFlow;
 import app.jaewook.stockmanager.service.dto.AssetResult;
 import org.springframework.stereotype.Component;
@@ -17,8 +18,9 @@ public class CashFlowDbMapper {
      * Service DTO -> Entity Mapping
      */
 
-    public CashFlow toEntity(AssetResult.CashFlow.CashFlowItemDto dto) {
+    public CashFlow toEntity(AssetResult.CashFlow.CashFlowItemDto dto, Account account) {
         return CashFlow.builder()
+                .account(account)
                 .tradeDate(parseDate(dto.tradeDate()))
                 .tradeNumber(dto.tradeNumber())
                 .summary(dto.summary())

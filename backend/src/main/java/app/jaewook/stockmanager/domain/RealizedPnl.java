@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,6 +17,10 @@ public class RealizedPnl {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     /**
      * 일자
@@ -77,10 +80,11 @@ public class RealizedPnl {
     private BigDecimal tradingTax;
 
     @Builder
-    public RealizedPnl(LocalDate date, String stockCode, String stockName, int quantity,
+    public RealizedPnl(Account account, LocalDate date, String stockCode, String stockName, int quantity,
                        BigDecimal buyPrice, BigDecimal executionPrice, BigDecimal realizedPnl,
                        BigDecimal pnlRate, String htsSellCommission, BigDecimal tradingCommission,
                        BigDecimal tradingTax) {
+        this.account = account;
         this.date = date;
         this.stockCode = stockCode;
         this.stockName = stockName;

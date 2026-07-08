@@ -9,8 +9,8 @@ import app.jaewook.stockmanager.infra.db.StockDetailRepository;
 import app.jaewook.stockmanager.infra.db.StockRepository;
 import app.jaewook.stockmanager.infra.db.StockUpdateLogRepository;
 import app.jaewook.stockmanager.infra.kiwoom.KiwoomApiClient;
+import app.jaewook.stockmanager.infra.kiwoom.KiwoomRateLimiter;
 import app.jaewook.stockmanager.infra.kiwoom.KiwoomTokenManager;
-import app.jaewook.stockmanager.infra.kiwoom.dto.KiwoomResponseHeader;
 import app.jaewook.stockmanager.infra.kiwoom.dto.stock.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,9 +37,7 @@ public class StockUpdateScheduler {
     private final StockUpdateLogRepository stockUpdateLogRepository;
     private final KiwoomApiClient kiwoomApiClient;
     private final KiwoomTokenManager tokenManager;
-
-    private static final int API_CALLS_PER_SECOND = 5;
-    private static final long RATE_LIMIT_PAUSE_MS = 1000L;
+    private final KiwoomRateLimiter kiwoomRateLimiter;
 
     private record StockData(Stock stock, StockDetail detail) {}
 
@@ -90,60 +88,26 @@ public class StockUpdateScheduler {
         }
     }
 
-    /**
-     * ka10099 연속 조회로 전체 종목리스트 조회
-     */
     private List<KiwoomStockInfoResponse.StockInfoItem> fetchAllStockInfoPages(MarketType marketType, String accessToken) {
-        List<KiwoomStockInfoResponse.StockInfoItem> allItems = new ArrayList<>();
-        String nextKey = null;
-        boolean hasNext = true;
-
         KiwoomStockInfoRequest request = KiwoomStockInfoRequest.builder()
                 .marketType(marketType)
                 .build();
 
-        while (hasNext) {
-            KiwoomStockInfoResult result = kiwoomApiClient.getStockInfoList(request, accessToken, nextKey);
-            KiwoomStockInfoResponse response = result.response();
-            KiwoomResponseHeader header = result.header();
-
-            if (response != null && response.list() != null) {
-                allItems.addAll(response.list());
-            }
-
-            hasNext = header.hasNext();
-            nextKey = header.nextKey();
-        }
-
-        return allItems;
+        return kiwoomRateLimiter.fetchAllPages(
+                key -> kiwoomApiClient.getStockInfoList(request, accessToken, key),
+                result -> result.response() != null ? result.response().list() : null,
+                KiwoomStockInfoResult::header);
     }
 
-    /**
-     * 종목 리스트에 대해 ka10001을 초당 5회 제한으로 호출
-     */
     private void fetchStockDetails(List<KiwoomStockInfoResponse.StockInfoItem> items,
                                    String marketType, String accessToken, List<StockData> result) {
-        for (int i = 0; i < items.size(); i++) {
-            if (i > 0 && i % API_CALLS_PER_SECOND == 0) {
-                try {
-                    // TODO: RateLimiter를 활용한 방식으로 교체
-                    Thread.sleep(RATE_LIMIT_PAUSE_MS);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.warn("StockUpdateScheduler - 스레드 인터럽트 발생, 업데이트 중단");
-                    return;
-                }
-            }
-
-            StockData stockData = fetchAndBuildStockData(items.get(i), marketType, accessToken);
-            if (stockData != null) {
-                result.add(stockData);
-            }
-
-            if ((i + 1) % 100 == 0) {
-                log.info("StockUpdateScheduler - {} 진행: {}/{}", marketType, i + 1, items.size());
-            }
-        }
+        int total = items.size();
+        List<StockData> fetched = kiwoomRateLimiter.scheduleAll(
+                items,
+                item -> fetchAndBuildStockData(item, marketType, accessToken),
+                i -> { if ((i + 1) % 100 == 0) log.info("StockUpdateScheduler - {} 진행: {}/{}", marketType, i + 1, total); }
+        );
+        result.addAll(fetched);
     }
 
     /**

@@ -1,5 +1,6 @@
 package app.jaewook.stockmanager.api;
 
+import app.jaewook.stockmanager.api.dto.ApiResponse;
 import app.jaewook.stockmanager.api.dto.StockRequest;
 import app.jaewook.stockmanager.api.dto.StockResponse;
 import app.jaewook.stockmanager.api.mapper.StockControllerMapper;

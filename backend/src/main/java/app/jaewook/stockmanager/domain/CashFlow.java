@@ -18,6 +18,10 @@ public class CashFlow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
+
     /**
      * 거래일자
      */
@@ -296,7 +300,7 @@ public class CashFlow {
     private String tradeHistoryType;
 
     @Builder
-    public CashFlow(LocalDate tradeDate, String tradeNumber, String summary, String creditTradeTypeName,
+    public CashFlow(Account account, LocalDate tradeDate, String tradeNumber, String summary, String creditTradeTypeName,
                     BigDecimal settlementAmount, BigDecimal loanRepayment, BigDecimal tradingAmountForeign,
                     BigDecimal settlementAmountForeign, BigDecimal depositBalance, String currencyCode,
                     String tradeTypeCode, String tradeTypeName, String stockName, BigDecimal tradingAmount,
@@ -311,6 +315,7 @@ public class CashFlow {
                     String tradeForm, BigDecimal taxBasePrice, BigDecimal taxCommissionSum,
                     BigDecimal foreignPaidTaxForeign, BigDecimal receivableForeign, String repaymentSumForeign,
                     String depositor, String tradeHistoryType) {
+        this.account = account;
         this.tradeDate = tradeDate;
         this.tradeNumber = tradeNumber;
         this.summary = summary;

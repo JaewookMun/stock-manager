@@ -1,4 +1,4 @@
-package app.jaewook.stockmanager.api;
+package app.jaewook.stockmanager.api.dto;
 
 import lombok.Getter;
 import lombok.ToString;

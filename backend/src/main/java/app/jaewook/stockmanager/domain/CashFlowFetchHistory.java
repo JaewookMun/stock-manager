@@ -17,8 +17,9 @@ public class CashFlowFetchHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String accountNumber;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
     @Column(nullable = false)
     private LocalDate targetDate;
@@ -26,8 +27,8 @@ public class CashFlowFetchHistory {
     @Column(nullable = false)
     private LocalDateTime fetchedAt;
 
-    public CashFlowFetchHistory(String accountNumber, LocalDate targetDate) {
-        this.accountNumber = accountNumber;
+    public CashFlowFetchHistory(Account account, LocalDate targetDate) {
+        this.account = account;
         this.targetDate = targetDate;
         this.fetchedAt = LocalDateTime.now();
     }

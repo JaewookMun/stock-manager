@@ -1,5 +1,6 @@
 package app.jaewook.stockmanager.service.mapper;
 
+import app.jaewook.stockmanager.domain.Account;
 import app.jaewook.stockmanager.domain.RealizedPnl;
 import app.jaewook.stockmanager.service.dto.AssetResult;
 import org.springframework.stereotype.Component;
@@ -13,8 +14,9 @@ public class RealizedPnlDbMapper {
      * Service DTO -> Entity Mapping
      */
 
-    public RealizedPnl toEntity(AssetResult.RealizedPnl.RealizedPnlItemDto dto) {
+    public RealizedPnl toEntity(AssetResult.RealizedPnl.RealizedPnlItemDto dto, Account account) {
         return RealizedPnl.builder()
+                .account(account)
                 .date(dto.date())
                 .stockCode(dto.stockCode())
                 .stockName(dto.stockName())
