@@ -73,6 +73,7 @@
 | 사용 API | OAuth 토큰 발급, `ka10073`(일자별종목별실현손익-기간), `kt00015`(위탁종합거래내역), `ka10099`(종목정보 리스트), `ka10001`(주식기본정보), 조건검색 목록조회(미연동) |
 | 통신 방식 | 동기 REST (`RestClient`), 페이지네이션은 응답 헤더(`cont-yn`, `next-key`) 기반 "연속조회" |
 | 레이트 리밋 | 초당 5건 (키움 정책) |
+| **API 원본 스펙** | [`docs/open_api/kiwoom_REST_API_doc.xlsx`](open_api/kiwoom_REST_API_doc.xlsx) — 키움 REST API 전체 공식 문서. 신규 키움 API 연동/기존 연동 변경 시 요청·응답 필드, 인증 방식, 제약사항은 이 문서를 1차 소스로 확인한다. **API ID가 곧 시트명**이다(예: `ka10073` 시트). 코드에서 실제 사용 중인 API: `au10001`(접근토큰 발급) · `ka10001`(주식기본정보요청) · `ka10073`(일자별종목별실현손익요청-기간) · `ka10099`(종목정보 리스트) · `ka10171`~`ka10174`(조건검색 목록조회/요청/실시간해제) · `kt00015`(위탁종합거래내역요청) — 각각 동일한 이름의 시트에서 확인 |
 
 ---
 
@@ -125,8 +126,10 @@ HTTP Response ← *Response DTO ← *ControllerMapper ← *Result DTO ← Kiwoom
 
 ### 3.4 키움 API 연동 계층 상세
 
+> 새 키움 API를 추가하거나 기존 연동(`KiwoomApiClient`, `infra/kiwoom/dto/`)을 수정할 때는 반드시 [`docs/open_api/kiwoom_REST_API_doc.xlsx`](open_api/kiwoom_REST_API_doc.xlsx)에서 해당 API ID와 동일한 이름의 시트를 열어 요청/응답 필드와 제약사항을 먼저 확인한다 ([2.3 외부 연동](#23-외부-연동) 참고). 이 절의 내용은 그 문서를 코드 구조 관점에서 요약한 것이며, 필드 단위 진실 소스(source of truth)는 항상 엑셀 원문이다.
+
 - **응답 래핑**: `KiwoomApiClient`의 각 메서드는 `Kiwoom*Result` record를 반환하며, 여기에 역직렬화된 응답 바디와 `KiwoomResponseHeader`(페이지네이션 헤더 `cont-yn`→`hasNext: boolean`, `next-key`→`nextKey: String`으로 변환)를 함께 담는다. 이를 통해 `ResponseEntity`가 Service 계층까지 새어나가지 않도록 캡슐화한다.
-- **토큰 관리**: `KiwoomTokenManager`가 계좌별 OAuth 토큰을 `ConcurrentHashMap<accountNumber, TokenInfo>`로 캐싱하며, 만료 1분 전 자동 갱신한다. 앱키/시크릿키는 `Account` 엔티티(DB)에 계좌별로 저장되며 `application.yml`에는 없다.
+- **토큰 관리**: `KiwoomTokenManager`가 계좌별 OAuth 토큰을 `ConcurrentHashMap<accountNumber, TokenInfo>`로 캐싱하며, 만료 1분 전 자동 갱신한다. 앱키/시크릿키는 `Account` 엔티티(DB)에 계좌별로 저장되며 `application.yml`에는 없다. 토큰 발급 API(`au10001`) 스펙은 [`kiwoom_REST_API_doc.xlsx`](open_api/kiwoom_REST_API_doc.xlsx) 시트 `au10001` 참고.
 - **레이트 리밋**: `KiwoomRateLimiter`가 단일 스레드 `ScheduledExecutorService`로 200ms 간격(초당 5건)을 강제한다.
   - `fetchAllPages`: 연속조회(페이지네이션) 순차 루프.
   - `scheduleAll`: N개의 독립 호출을 `i * 200ms` 오프셋으로 팬아웃 실행, 개별 실패는 스킵하고 전체를 중단시키지 않음(대량 종목 상세 조회에 사용).

@@ -6,7 +6,7 @@
 |---|---|
 | 목적 | 백엔드가 제공하는 REST API의 요청/응답 스펙을 엔드포인트 단위로 상세 기술 |
 | 대상 독자 | 프론트엔드 개발자, API를 직접 호출/테스트하는 개발자 |
-| 관련 문서 | [`FEATURES.md`](./FEATURES.md) — 각 기능의 배경, 처리 로직(캐싱/분할조회 등), 화면 동작은 그쪽을 참고. 본 문서는 "무엇을 요청하면 무엇이 오는가"에만 집중 |
+| 관련 문서 | [`FEATURES.md`](./FEATURES.md) — 각 기능의 배경, 처리 로직(캐싱/분할조회 등), 화면 동작은 그쪽을 참고. 본 문서는 "무엇을 요청하면 무엇이 오는가"에만 집중. [`kiwoom_REST_API_doc.xlsx`](open_api/kiwoom_REST_API_doc.xlsx) — 아래 각 엔드포인트가 감싸는 키움 원본 API의 공식 스펙. API ID별로 시트가 하나씩 있다(예: `ka10073` 시트) |
 | 작성 기준 | 소스 코드(`api/dto/*Request.java`, `api/dto/*Response.java`, `*Controller.java`) 및 `backend/README.md` 실사 |
 | 최종 갱신 | 2026-07-08 |
 
@@ -84,7 +84,7 @@
 
 ## 3. `GET /api/assets/realized-pnl`
 
-기간별 실현손익 내역을 조회한다. (원천: 키움 `ka10073` 일자별종목별실현손익요청-기간)
+기간별 실현손익 내역을 조회한다. (원천: 키움 `ka10073` 일자별종목별실현손익요청-기간, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `ka10073`)
 
 ### 요청 파라미터
 
@@ -141,7 +141,7 @@
 
 ## 4. `GET /api/assets/cash-flow`
 
-계좌의 거래 원장(입출금/매매/대출/환전 등)을 조회한다. (원천: 키움 `kt00015` 위탁종합거래내역요청)
+계좌의 거래 원장(입출금/매매/대출/환전 등)을 조회한다. (원천: 키움 `kt00015` 위탁종합거래내역요청, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `kt00015`)
 
 ### 요청 파라미터
 
@@ -304,13 +304,13 @@ ROE/PER/거래소 조건으로 상장 종목을 스크리닝한다. 사전에 �
 | `items[].salesAmount` | BigDecimal | 매출액 |
 
 ### 참고
-- 데이터 원천(배치 갱신 로직)은 [`FEATURES.md`](./FEATURES.md) 4.6 참고.
+- 데이터 원천(배치 갱신 로직)은 [`FEATURES.md`](./FEATURES.md) 4.6 참고. 배치가 호출하는 키움 API는 `ka10099`(종목정보 리스트, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `ka10099`)와 `ka10001`(주식기본정보요청, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `ka10001`).
 
 ---
 
 ## 6. `GET /api/stocks/conditions`
 
-키움 HTS에 등록된 조건검색식 목록을 조회한다. (원천: 키움 조건검색 목록조회 API)
+키움 HTS에 등록된 조건검색식 목록을 조회한다. (원천: 키움 조건검색 목록조회 API `ka10171`, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `ka10171` — 관련 API `ka10172` 조건검색 요청 일반(시트 `ka10172`), `ka10173` 조건검색 요청 실시간(시트 `ka10173`), `ka10174` 조건검색 실시간 해제(시트 `ka10174`))
 
 > **주의**: 현재 `StockService.getConditions()`는 실제 키움 API를 호출하지 않고 항상 아래와 같은 빈 결과를 반환하는 하드코딩 스텁이다. 응답 스펙은 정의되어 있으나 데이터는 채워지지 않는다.
 

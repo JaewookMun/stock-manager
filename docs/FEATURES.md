@@ -6,7 +6,7 @@
 |---|---|
 | 목적 | 현재 코드베이스에 구현된 기능이 **어떻게 동작하는가**(배경, 처리 로직, 화면 동작)를 사실 기준으로 문서화 |
 | 대상 독자 | 백엔드/프론트엔드 개발자, 신규 합류자 |
-| 관련 문서 | [`PRD.md`](./PRD.md) — 제품 배경/목적/로드맵 ("왜, 무엇을 만들려 하는가"). [`API_SPEC.md`](./API_SPEC.md) — 엔드포인트별 요청/응답 필드 상세 스펙. [`TASK.md`](./TASK.md) — **기능별 남은 작업 범위와 진행 상태**. 본 문서는 진행 상태·작업 목록·우선순위를 다루지 않는다 — 그것은 전적으로 `TASK.md`의 역할이다. |
+| 관련 문서 | [`PRD.md`](./PRD.md) — 제품 배경/목적/로드맵 ("왜, 무엇을 만들려 하는가"). [`API_SPEC.md`](./API_SPEC.md) — 엔드포인트별 요청/응답 필드 상세 스펙. [`TASK.md`](./TASK.md) — **기능별 남은 작업 범위와 진행 상태**. [`kiwoom_REST_API_doc.xlsx`](open_api/kiwoom_REST_API_doc.xlsx) — 각 절에서 언급하는 키움 API ID의 공식 원본 스펙(API ID별 시트). 본 문서는 진행 상태·작업 목록·우선순위를 다루지 않는다 — 그것은 전적으로 `TASK.md`의 역할이다. |
 | 번호 체계 | 4.1~4.6은 [`PRD.md`](./PRD.md) 4장(기능 요구사항)의 항목 번호와 1:1로 대응한다. |
 | 작성 기준 | 소스 코드(controller/dto/entity), `backend/README.md`, `backend/CLAUDE.md`, `frontend/CLAUDE.md` 실사 |
 | 최종 갱신 | 2026-07-08 |
@@ -35,7 +35,7 @@
 ## 4.2 실현손익 조회 (자산관리)
 
 ### 개요
-증권사 앱은 실현손익 조회 기간이 제한적이므로, 키움 API(`ka10073` 일자별종목별실현손익요청-기간)를 통해 데이터를 DB에 누적하고 임의 기간을 재조합해 조회할 수 있게 한다.
+증권사 앱은 실현손익 조회 기간이 제한적이므로, 키움 API(`ka10073` 일자별종목별실현손익요청-기간, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `ka10073`)를 통해 데이터를 DB에 누적하고 임의 기간을 재조합해 조회할 수 있게 한다.
 
 ### API
 `GET /api/assets/realized-pnl` — 상세 요청/응답 스펙은 [`API_SPEC.md`](./API_SPEC.md#3-get-apiassetsrealized-pnl) 참고. `stockCode` 파라미터로 특정 종목만 필터링할 수 있다.
@@ -64,7 +64,7 @@
 ## 4.3 입출금/거래내역(현금흐름) 조회
 
 ### 개요
-키움 `kt00015` 위탁종합거래내역요청 API를 통해 계좌의 전체 거래 원장(입출금, 매매, 대출, 환전 등)을 조회한다.
+키움 `kt00015` 위탁종합거래내역요청 API([원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `kt00015`)를 통해 계좌의 전체 거래 원장(입출금, 매매, 대출, 환전 등)을 조회한다.
 
 ### API
 `GET /api/assets/cash-flow` — 상세 요청/응답 스펙(45개 필드 전체)은 [`API_SPEC.md`](./API_SPEC.md#4-get-apiassetscash-flow) 참고.
@@ -109,7 +109,7 @@
 `GET /api/stocks/conditions` — 상세 응답 스펙은 [`API_SPEC.md`](./API_SPEC.md#6-get-apistocksconditions) 참고.
 
 ### 현재 동작
-`StockController.conditions()` → `StockService.getConditions()`는 실제 키움 조건검색 API를 호출하지 않고, 항상 `resultCode=0, items=[]`인 빈 결과를 반환하는 하드코딩 스텁이다. 프론트엔드 화면은 없다.
+`StockController.conditions()` → `StockService.getConditions()`는 실제 키움 조건검색 API를 호출하지 않고, 항상 `resultCode=0, items=[]`인 빈 결과를 반환하는 하드코딩 스텁이다. 프론트엔드 화면은 없다. 연동 대상 키움 API 원본 스펙([엑셀](open_api/kiwoom_REST_API_doc.xlsx)): `ka10171` 조건검색 목록조회(시트 `ka10171`), `ka10172` 조건검색 요청 일반(시트 `ka10172`), `ka10173` 조건검색 요청 실시간(시트 `ka10173`), `ka10174` 조건검색 실시간 해제(시트 `ka10174`).
 
 구현 진행 상태 및 남은 작업은 [`TASK.md`](./TASK.md) 5장 참고.
 
@@ -124,8 +124,8 @@
 `StockUpdateScheduler` — cron `0 30 15 * * MON-FRI` (평일 15:30 KST, 국내 정규장 마감 이후).
 
 ### 처리 순서
-1. 키움 `ka10099`(종목정보 리스트) API로 **코스피 + 코스닥 전 종목** 목록을 연속조회(페이지네이션, `cont-yn`/`next-key`)로 모두 수집.
-2. 수집된 각 종목에 대해 키움 `ka10001`(주식기본정보요청) API로 재무 상세(현재가, 시가총액, PER, ROE, PBR, EPS, BPS, 영업이익, 매출액, 거래량)를 조회. 종목 수가 많으므로(2000개 이상) **초당 5건 제한**을 준수하기 위해 `KiwoomRateLimiter.scheduleAll()`을 통해 200ms 간격으로 개별 호출을 분산 실행하며, 개별 종목 실패는 스킵하고 계속 진행한다.
+1. 키움 `ka10099`(종목정보 리스트, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `ka10099`) API로 **코스피 + 코스닥 전 종목** 목록을 연속조회(페이지네이션, `cont-yn`/`next-key`)로 모두 수집.
+2. 수집된 각 종목에 대해 키움 `ka10001`(주식기본정보요청, [원본 스펙](open_api/kiwoom_REST_API_doc.xlsx) 시트 `ka10001`) API로 재무 상세(현재가, 시가총액, PER, ROE, PBR, EPS, BPS, 영업이익, 매출액, 거래량)를 조회. 종목 수가 많으므로(2000개 이상) **초당 5건 제한**을 준수하기 위해 `KiwoomRateLimiter.scheduleAll()`을 통해 200ms 간격으로 개별 호출을 분산 실행하며, 개별 종목 실패는 스킵하고 계속 진행한다.
 3. `Stock`(종목 마스터): 이미 존재하는 종목코드는 갱신하지 않고, 신규 종목만 insert.
 4. `StockDetail`(재무 스냅샷): 매 실행마다 **전부 신규 insert** — 기존 행을 삭제하거나 갱신하지 않으므로, 시간 경과에 따른 재무지표 변화가 시계열로 누적된다. 스크리닝 쿼리가 이 중 어떤 스냅샷을 사용하는지는 `StockQueryRepository` 쿼리 정의를 확인해야 한다.
 5. 실행 결과는 `StockUpdateLog`에 기록: `status`(`RUNNING`→`SUCCESS`/`FAILED`), `kospiCount`, `kosdaqCount`, `totalSavedCount`, `errorMessage`(최대 1000자), `startedAt`, `completedAt`. 이 로그를 조회하는 API/화면은 없으며, DB 직접 조회로만 확인 가능하다.

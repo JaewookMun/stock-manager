@@ -20,6 +20,7 @@ Stock Manager — a personal tool that aggregates and serves stock trading data 
 - `docs/API_SPEC.md` — field-level request/response spec for every REST endpoint.
 - `docs/TRD.md` — architecture, tech stack, infra/deployment gaps, security posture, tech debt.
 - `docs/TASK.md` — the single source of truth for remaining work and its priority (`P0`–`P3`), organized by feature area to mirror `FEATURES.md`.
+- `docs/open_api/kiwoom_REST_API_doc.xlsx` — the official Kiwoom REST API reference. One sheet per API ID (e.g. the `ka10073` sheet, the `kt00015` sheet). **Before adding or modifying any Kiwoom API call, open the sheet matching that API ID first** — it's the field-level source of truth; `TRD.md` §2.3/§3.4 and `API_SPEC.md` only summarize it and link to the relevant sheet for the APIs currently in use.
 
 When you change what a feature *does*, update `FEATURES.md`. When you change what work *remains*, update `TASK.md`. Keep the two separate.
 
